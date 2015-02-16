@@ -3,13 +3,20 @@
 //  SudokuSolver
 //
 //  Created by Jeff Hajewski on 11/24/14.
-//  Copyright (c) 2014 Monarch Lags. All rights reserved.
+//  Copyright (c) 2014 Monarch Labs. All rights reserved.
 //
 
 #import "MCLSudokuPuzzleViewController.h"
-#import "MCLSudokuPuzzle.h"
 
 @interface MCLSudokuPuzzleViewController ()
+
+/*
+ * Quick and dirty way to get the interface up and running
+ * but not the final design. The final UI will likely
+ * subclass UIView so that each cell can show the current
+ * guess as well as potential guesses. This also shortens
+ * this class as we can generate the 81 subview programmatically
+ */
 
 // First column
 @property (weak, nonatomic) IBOutlet UITextField *cell0;
@@ -99,6 +106,7 @@
 @property (weak, nonatomic) IBOutlet UITextField *cell70;
 @property (weak, nonatomic) IBOutlet UITextField *cell71;
 
+// Ninth column
 @property (weak, nonatomic) IBOutlet UITextField *cell72;
 @property (weak, nonatomic) IBOutlet UITextField *cell73;
 @property (weak, nonatomic) IBOutlet UITextField *cell74;
@@ -109,23 +117,37 @@
 @property (weak, nonatomic) IBOutlet UITextField *cell79;
 @property (weak, nonatomic) IBOutlet UITextField *cell80;
 
-@property (strong, nonatomic) MCLSudokuPuzzle *puzzle;
 
+@property (weak, nonatomic) IBOutlet UIProgressView *puzzleProgressBar;
+
+@property CGFloat solutionProgress;
 
 // Solving method
 - (IBAction)solvePuzzle:(id)sender;
+- (IBAction)visualSolvePuzzle:(id)sender;
+- (IBAction)tapRegistered:(id)sender;
+- (IBAction)swipeDownRegistered:(id)sender;
 
 - (void)loadPuzzle;
 - (void)showSolution;
+- (void)showPuzzle;
+
+// Clear board contents and reset font color to black
+- (IBAction)clearPuzzle:(id)sender;
+
 
 
 
 @end
 
+
+#pragma mark - Implementation
+
 @implementation MCLSudokuPuzzleViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    _solutionProgress = 0;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -133,32 +155,66 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context
+{
+    [super observeValueForKeyPath:keyPath
+                         ofObject:object
+                           change:change
+                          context:context];
+    NSLog(@"%@\n", self.puzzle.solution);
+    [self showSolution];
+}
+
 - (IBAction)solvePuzzle:(id)sender {
     // Load in the puzzle from the puzzle board
     [self loadPuzzle];
     
-    // Solve the puzzle
+    // Solve the puzzle in the background
     [self.puzzle solvePuzzle];
     
     // Display the puzzle on the puzzle board
     [self showSolution];
-    
-    // For debugging purposes
-    NSLog(@"User puzzle is loaded and being printed from MCLSudokuPuzzle descriptor:\n%@\n",self.puzzle);
+}
+
+/**
+ * Shows solution progress on screen while the puzzle is being solved
+ */
+- (IBAction)visualSolvePuzzle:(id)sender {
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(receivePuzzleProgressNotification)
+                                                 name:@"solutionProgressIncrementer"
+                                               object:nil];
+    [self loadPuzzle];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^(void){
+        [self.puzzle solvePuzzle];
+        NSLog(@"Puzzle solved. Removing observer....\n");
+        [[NSNotificationCenter defaultCenter] removeObserver:self];
+        
+    });
+    [self showSolution];
+}
+
+- (IBAction)tapRegistered:(id)sender {
+    [self.view endEditing:YES];
+}
+
+- (IBAction)swipeDownRegistered:(id)sender {
+    [self.view endEditing:YES];
 }
 
 - (void)loadPuzzle {
+    
     NSMutableArray *userPuzzle = [[NSMutableArray alloc] init];
     for (int i = 0; i < 81; i++) {
         // Create a selector for cell i
-        NSString *selectorName = [NSString stringWithFormat:@"cell%d", i];
-        
-        // Create a pointer to the ith cell
-        UITextField *aCell = [self performSelector:NSSelectorFromString(selectorName)];
+        NSString *cellName = [NSString stringWithFormat:@"cell%d", i];
+
         
         // Initialize a number formatter and format the cell text to a NSNumber
         NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-        NSNumber *tempNumber = [formatter numberFromString: aCell.text];
+        NSNumber *tempNumber = [formatter numberFromString:[self valueForKeyPath:[NSString stringWithFormat:@"%@.text", cellName]]];
         
         // Check whether there was a number in the cell or whether it was blank.
         // If there was a number, store it in the puzzle, otherwise set the ith
@@ -170,36 +226,94 @@
         }
     } // End i-loop
     
-    if (!_puzzle) {
-        _puzzle = [[MCLSudokuPuzzle alloc] initWithPuzzle:userPuzzle];
-    }
+    self.puzzle = [[MCLSudokuPuzzle alloc] initWithPuzzle:userPuzzle];
+    self.solutionProgress = 81 - [self countZeros];
 }
 
 - (void)showSolution {
     // Create copies of the puzzle and solution
     // The puzzle is only used to determine cell text coloring
-    NSArray *puzzle = [[NSArray alloc] initWithArray:self.puzzle.puzzle copyItems:YES];
-    NSMutableArray *solution = [[NSMutableArray alloc] initWithArray:self.puzzle.solution copyItems:YES];
     for (int i = 0; i < 81; i++) {
-        // Create a selector for cell i
-        NSString *selectorName = [NSString stringWithFormat:@"cell%d", i];
-        
-        // Create a pointer to the ith cell
-        UITextField *aCell = [self performSelector:NSSelectorFromString(selectorName)];
+        // Create a string containing the name for cell i
+        NSString *cellName = [NSString stringWithFormat:@"cell%d", i];
         
         // Set cell text to solution[i]
-        aCell.text = [NSString stringWithFormat:@"%@", solution[i]];
+        NSString *cellText = [self.puzzle.solution[i] isEqual:@0] ? [NSString stringWithFormat:@""] : [NSString stringWithFormat:@"%@", self.puzzle.solution[i]];
+        [self setValue:[NSString stringWithFormat:@"%@", cellText] forKeyPath:[NSString stringWithFormat:@"%@.text", cellName]];
         
-        if ([puzzle[i] isEqual:@0]) {
+        if ([self.puzzle.puzzle[i] isEqual:@0]) {
             // If the ith cell of the puzzle is 0, then it is part of the solution
             // Color it blue
-            aCell.textColor = [UIColor blueColor];
+            [self setValue:[UIColor blackColor] forKeyPath:[NSString stringWithFormat:@"%@.textColor", cellName]];
         } else {
             // Otherwise, it was part of the original problem
             // Color it black
-            aCell.textColor = [UIColor blackColor];
+            [self setValue:[UIColor whiteColor] forKeyPath:[NSString stringWithFormat:@"%@.textColor", cellName]];
+            [self setValue:[UIColor grayColor] forKeyPath:[NSString stringWithFormat:@"%@.backgroundColor", cellName]];
         }
     }
 }
 
+- (void)showPuzzle {
+    for (int i = 0; i < 81; i++) {
+        // Create a string containing the name for cell i
+        NSString *cellName = [NSString stringWithFormat:@"cell%d", i];
+        NSString *cellText = [self.puzzle.solution[i] isEqual:@0] ? [NSString stringWithFormat:@""] : [NSString stringWithFormat:@"%@", self.puzzle.solution[i]];;
+        // Set cell text to puzzle[i]
+        if ([self.puzzle.puzzle[i] isEqual:@0]) {
+            cellText = @"";
+        }
+        [self setValue:[NSString stringWithFormat:@"%@", cellText] forKeyPath:[NSString stringWithFormat:@"%@.text", cellName]];
+        
+        if ([self.puzzle.puzzle[i] isEqual:@0]) {
+            // If the ith cell of the puzzle is 0, then it is part of the solution
+            // Color it blue
+            [self setValue:[UIColor blackColor] forKeyPath:[NSString stringWithFormat:@"%@.textColor", cellName]];
+        } else {
+            // Otherwise, it was part of the original problem
+            // Color it black
+            [self setValue:[UIColor blackColor] forKeyPath:[NSString stringWithFormat:@"%@.textColor", cellName]];
+        }
+    }
+}
+
+- (IBAction)clearPuzzle:(id)sender {
+    [self.puzzleProgressBar setProgress:0.0f animated:YES];
+    for (int i = 0; i < 81; i++) {
+        // Create a selector for cell i
+        NSString *cellName = [NSString stringWithFormat:@"cell%d", i];
+        
+        // Create a pointer to the ith cell
+        //UITextField *aCell = [self performSelector:NSSelectorFromString(selectorName)];
+        
+        // Set cell text to solution[i]
+        //aCell.textColor = [UIColor blackColor];
+        [self setValue:[UIColor blackColor]
+            forKeyPath:[NSString stringWithFormat:@"%@.textColor", cellName]];
+        [self setValue:@""
+            forKeyPath:[NSString stringWithFormat:@"%@.text", cellName]];
+        [self setValue:[UIColor whiteColor]
+            forKeyPath:[NSString stringWithFormat:@"%@.backgroundColor", cellName]];
+        //[aCell setText:@""];
+    }
+    NSLog(@"Finished clearPuzzle for-loop\n");
+}
+
+- (void)receivePuzzleProgressNotification {
+    dispatch_async(dispatch_get_main_queue(), ^(void){
+        self.solutionProgress = 81 - [self countZeros];
+        [self.puzzleProgressBar setProgress:self.solutionProgress animated:YES];
+        [self showSolution];
+    });
+}
+
+- (CGFloat)countZeros {
+    CGFloat counter = 0;
+    for (int i = 0; i < 81; i++) {
+        if ([self.puzzle.solution[i] isEqual:@0]) {
+            counter++;
+        }
+    }
+    return counter;
+}
 @end

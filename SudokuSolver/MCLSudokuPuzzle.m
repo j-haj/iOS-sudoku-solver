@@ -3,52 +3,84 @@
 //  SudokuSolver
 //
 //  Created by Jeff Hajewski on 11/21/14.
-//  Copyright (c) 2014 Monarch Lags. All rights reserved.
+//  Copyright (c) 2014 Monarch Labs. All rights reserved.
 //
 
-/** Sudoku Puzzle Class
- *
- * Sudoku puzzles are stored in column-major order as one long vector.
- * This means that as you look at a Sudoku puzzle and index the cells,
- * starting from the upper left corner of the puzzle, the indices increase
- * as you follow each column down. When you reach the bottom of a column,
- * the next index is the top row of the next column. Below is a diagram of
- * a puzzle and its cell index layout:
- *
- * [0][ 9][18][27][36][45][54][63][72]
- * [1][10][19][28][37][46][55][64][73]
- * [2][11][20][29][38][47][56][65][74]
- * [3][12][21][30][39][48][57][66][75]
- * [4][13][22][31][40][49][58][67][76]
- * [5][14][23][32][41][50][59][68][77]
- * [6][15][24][33][42][51][60][69][78]
- * [7][16][25][34][43][52][61][70][79]
- * [8][17][26][35][44][53][62][71][80]
- *
- * A puzzle is decomposed into 9 3x3 blocks (referred to as indexBlocks in
- * the class) and are labeled as follows:
- *
- * [0][0][0][3][3][3][6][6][6]
- * [0][0][0][3][3][3][6][6][6]
- * [0][0][0][3][3][3][6][6][6]
- * [1][1][1][4][4][4][7][7][7]
- * [1][1][1][4][4][4][7][7][7]
- * [1][1][1][4][4][4][7][7][7]
- * [2][2][2][5][5][5][8][8][8]
- * [2][2][2][5][5][5][8][8][8]
- * [2][2][2][5][5][5][8][8][8]
- *
- * When storing a puzzle, the value 0 denotes an unknown value.
+/*!
+   @class MCLSudokuPuzzle
+ 
+  Sudoku puzzles are stored in column-major order as one long vector.
+  This means that as you look at a Sudoku puzzle and index the cells,
+  starting from the upper left corner of the puzzle, the indices increase
+  as you follow each column down. When you reach the bottom of a column,
+  the next index is the top row of the next column. Below is a diagram of
+  a puzzle and its cell index layout:
+ 
+  [0][ 9][18][27][36][45][54][63][72]
+ 
+  [1][10][19][28][37][46][55][64][73]
+ 
+  [2][11][20][29][38][47][56][65][74]
+ 
+  [3][12][21][30][39][48][57][66][75]
+ 
+  [4][13][22][31][40][49][58][67][76]
+ 
+  [5][14][23][32][41][50][59][68][77]
+ 
+  [6][15][24][33][42][51][60][69][78]
+ 
+  [7][16][25][34][43][52][61][70][79]
+ 
+  [8][17][26][35][44][53][62][71][80]
+ 
+ 
+  A puzzle is decomposed into 9 3x3 blocks (referred to as indexBlocks in
+  the class) and are labeled as follows:
+ 
+  [0][0][0][3][3][3][6][6][6]
+ 
+  [0][0][0][3][3][3][6][6][6]
+ 
+  [0][0][0][3][3][3][6][6][6]
+ 
+  [1][1][1][4][4][4][7][7][7]
+ 
+  [1][1][1][4][4][4][7][7][7]
+ 
+  [1][1][1][4][4][4][7][7][7]
+ 
+  [2][2][2][5][5][5][8][8][8]
+ 
+  [2][2][2][5][5][5][8][8][8]
+ 
+  [2][2][2][5][5][5][8][8][8]
+ 
+ 
+  When storing a puzzle, the value 0 denotes an unknown value.
+ 
+  @abstract Class that handles puzzle storage and solving implementations
  */
 
 #import "MCLSudokuPuzzle.h"
 
 @interface MCLSudokuPuzzle ()
 
+/*!
+    @brief Recursive solver for sudoku puzzle
+    @function recursivelySolvePuzzleWithPositionList:atRecursionDepth:
+    @param positionList NSArray that holds the positions of empty cells
+    @param recursionDepth int that tracks the depth of the recursion
+ */
 - (NSMutableArray *)recursivelySolvePuzzleWithPositionList: (NSArray *)positionList
                            atRecursionDepth:(int)recursionDepth;
+
+/*!
+    @brief Returns a NSArray of valid guesses for the specified position
+    @function returnValidGuessesAtPosition
+    @param position the current position within the puzzle
+ */
 - (NSArray *)returnValidGuessesAtPosition: (int)position;
-- (BOOL)isSolved;
 
 @end
 
@@ -183,21 +215,27 @@
     // Create a list of valid guesses
     NSMutableArray *validGuesses = [[NSMutableArray alloc] init];
     for (id e in valueList) {
-        if (![columnValues containsObject:e] && ![rowValues containsObject:e] && ![blockValues containsObject:e]) {
+        if (![columnValues containsObject:e] && ![rowValues containsObject:e] &&
+            ![blockValues containsObject:e]) {
             [validGuesses addObject:e];
         }
     }
     return validGuesses;
 }
 
-// Find Sudoku puzzle solution using recursion. This algorithm determines a list of possible guesses for a given
-// puzzle position and picks one of the guesses. It then calls itself on the newly formed puzzle (old puzzle + new guess).
-// This process is repeated until either the puzzle is solved or there are no more guesses. If there are no more valid
-// guesses, the solver drops back a recursion levels until it finds a new valid guess.
-
+/*
+ * Find Sudoku puzzle solution using recursion. This algorithm determines a list
+ * of possible guesses for a given puzzle position and picks one of the guesses.
+ * It then calls itself on the newly formed puzzle (old puzzle + new guess).
+ * This process is repeated until either the puzzle is solved or there are no
+ * more guesses. If there are no more valid guesses, the solver drops back a
+ * recursion levels until it finds a new valid guess.
+ */
 //TODO: Consider making this a Las Vegas algorithm
-- (NSMutableArray *)recursivelySolvePuzzleWithPositionList: (NSArray *)positionList atRecursionDepth:(int)recursionDepth
+- (NSMutableArray *)recursivelySolvePuzzleWithPositionList: (NSArray *)positionList
+                                          atRecursionDepth:(int)recursionDepth
 {
+    NSNotificationCenter *notification = [NSNotificationCenter defaultCenter];
     if (self.isSolved) {
         return self.solution;
     } else {
@@ -210,13 +248,21 @@
             [self.solution setObject:guess atIndexedSubscript:[positionList[recursionDepth] intValue]];
             
             [self.solution setArray:[self recursivelySolvePuzzleWithPositionList:positionList atRecursionDepth:(recursionDepth + 1)]];
+            
+            // Send notification for new guess added to the puzzle
+            [notification postNotificationName:@"solutionProgressIncrementer"
+                                        object:self
+                                      userInfo:nil];
+            
             if (self.isSolved) {
                 return self.solution;
             } else {
                 [self.solution setObject:@0 atIndexedSubscript:[positionList[recursionDepth] intValue]];
             }
         }
-        
+        [notification postNotificationName:@"solutionProgressIncrementer"
+                                    object:self
+                                  userInfo:nil];
         return self.solution;
     }
 }
@@ -232,21 +278,22 @@
         }
     }
     
-    [self.solution setArray:[self recursivelySolvePuzzleWithPositionList:posList atRecursionDepth:0]];
+    [self.solution setArray:[self recursivelySolvePuzzleWithPositionList:posList
+                                                        atRecursionDepth:0]];
 }
 
 // Returns a bool stating the solution state of a Sudoku puzzle
-- (BOOL)isSolved
-{
+- (BOOL)isSolved {
     if ([self.solution containsObject:@0]) {
         return false;
     }
     
     return true;
 }
-
-// Returns an array containing the indices of the empty Sudoku cells
-- (NSArray *)getEmptyIndices {
+/**
+ * Returns an array containing the indices of the empty Sudoku cells
+ */
+ - (NSArray *)getEmptyIndices {
     NSMutableArray *emptyIndexArray = [[NSMutableArray alloc] init];
     for (int i = 0; i < 81; i++) {
         if (self.puzzle[i] == 0) {
@@ -258,11 +305,13 @@
     return [emptyIndexArray copy];
 }
 
-// Custom description method. MCLSudokuPuzzle descriptions are of the form:
-// Puzzle:
-// <puzzle array>
-// Solution:
-// <solution array>
+/**
+ *Custom description method. MCLSudokuPuzzle descriptions are of the form:
+ * Puzzle:
+ * <puzzle array>
+ * Solution:
+ * <solution array>
+ */
 - (NSString *)description
 {
     NSString *puzzleString = [[NSString alloc] init];

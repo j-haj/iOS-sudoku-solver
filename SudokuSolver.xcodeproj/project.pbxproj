@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6DA705231A2DE6E300C82DBB /* MCLPuzzleTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6DA705221A2DE6E300C82DBB /* MCLPuzzleTableViewController.m */; };
 		755191E31A1F692A004F6EFD /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 755191E21A1F692A004F6EFD /* main.m */; };
 		755191E61A1F692A004F6EFD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 755191E51A1F692A004F6EFD /* AppDelegate.m */; };
 		755191EC1A1F692A004F6EFD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 755191EA1A1F692A004F6EFD /* Main.storyboard */; };
@@ -28,6 +29,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6DA705211A2DE6E300C82DBB /* MCLPuzzleTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MCLPuzzleTableViewController.h; sourceTree = "<group>"; };
+		6DA705221A2DE6E300C82DBB /* MCLPuzzleTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MCLPuzzleTableViewController.m; sourceTree = "<group>"; };
 		755191DD1A1F692A004F6EFD /* SudokuSolver.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SudokuSolver.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		755191E11A1F692A004F6EFD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		755191E21A1F692A004F6EFD /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -63,6 +66,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6D24F9281A920F0D004A133E /* View Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				757DEBCA1A235F3B00691BDF /* MCLSudokuPuzzleViewController.h */,
+				757DEBCB1A235F3B00691BDF /* MCLSudokuPuzzleViewController.m */,
+				6DA705211A2DE6E300C82DBB /* MCLPuzzleTableViewController.h */,
+				6DA705221A2DE6E300C82DBB /* MCLPuzzleTableViewController.m */,
+			);
+			name = "View Controllers";
+			sourceTree = "<group>";
+		};
+		6D24F9291A920F26004A133E /* Solver */ = {
+			isa = PBXGroup;
+			children = (
+				757DEBC71A235CC800691BDF /* MCLSudokuPuzzle.h */,
+				757DEBC81A235CC800691BDF /* MCLSudokuPuzzle.m */,
+			);
+			name = Solver;
+			sourceTree = "<group>";
+		};
 		755191D41A1F692A004F6EFD = {
 			isa = PBXGroup;
 			children = (
@@ -84,10 +107,8 @@
 		755191DF1A1F692A004F6EFD /* SudokuSolver */ = {
 			isa = PBXGroup;
 			children = (
-				757DEBCA1A235F3B00691BDF /* MCLSudokuPuzzleViewController.h */,
-				757DEBCB1A235F3B00691BDF /* MCLSudokuPuzzleViewController.m */,
-				757DEBC71A235CC800691BDF /* MCLSudokuPuzzle.h */,
-				757DEBC81A235CC800691BDF /* MCLSudokuPuzzle.m */,
+				6D24F9291A920F26004A133E /* Solver */,
+				6D24F9281A920F0D004A133E /* View Controllers */,
 				755191EA1A1F692A004F6EFD /* Main.storyboard */,
 				755191ED1A1F692A004F6EFD /* Images.xcassets */,
 				755191EF1A1F692A004F6EFD /* LaunchScreen.xib */,
@@ -228,6 +249,7 @@
 				755191E61A1F692A004F6EFD /* AppDelegate.m in Sources */,
 				755191E31A1F692A004F6EFD /* main.m in Sources */,
 				757DEBCC1A235F3B00691BDF /* MCLSudokuPuzzleViewController.m in Sources */,
+				6DA705231A2DE6E300C82DBB /* MCLPuzzleTableViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
